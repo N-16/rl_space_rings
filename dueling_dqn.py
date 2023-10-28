@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
+import datetime
 
 
 class ReplayBuffer(object):
@@ -39,7 +40,7 @@ class ReplayBuffer(object):
 
 
 class DuelingLinearDeepQNetwork(nn.Module):
-    def __init__(self, ALPHA, n_actions, name, input_dims, chkpt_dir='tmp/dqn'):
+    def __init__(self, ALPHA, n_actions, name, input_dims, chkpt_dir='models'):
         super(DuelingLinearDeepQNetwork, self).__init__()
 
         self.fc1 = nn.Linear(*input_dims, 128)
@@ -50,6 +51,7 @@ class DuelingLinearDeepQNetwork(nn.Module):
         self.optimizer = optim.Adam(self.parameters(), lr=ALPHA)
         self.loss = nn.MSELoss()
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        print(self.device)
         self.to(self.device)
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name+'_dqn')
@@ -73,7 +75,7 @@ class DuelingLinearDeepQNetwork(nn.Module):
 class Agent(object):
     def __init__(self, gamma, epsilon, alpha, n_actions, input_dims,
                  mem_size, batch_size, eps_min=0.01, eps_dec=5e-7,
-                 replace=1000, chkpt_dir='tmp/dqn'):
+                 replace=1000, chkpt_dir='models'):
         self.gamma = gamma
         self.epsilon = epsilon
         self.eps_min = eps_min
@@ -88,6 +90,8 @@ class Agent(object):
                                    name='q_eval', chkpt_dir=chkpt_dir)
         self.q_next = DuelingLinearDeepQNetwork(alpha, n_actions, input_dims=input_dims,
                                    name='q_next', chkpt_dir=chkpt_dir)
+        
+        self.default_epsilon = epsilon
 
     def store_transition(self, state, action, reward, state_, done):
         self.memory.store_transition(state, action, reward, state_, done)
@@ -109,6 +113,7 @@ class Agent(object):
             self.q_next.load_state_dict(self.q_eval.state_dict())
 
     def decrement_epsilon(self):
+    
         self.epsilon = self.epsilon - self.eps_dec \
                          if self.epsilon > self.eps_min else self.eps_min
 
@@ -129,7 +134,7 @@ class Agent(object):
         new_state = T.tensor(new_state).to(self.q_eval.device)
         action = T.tensor(action).to(self.q_eval.device)
         rewards = T.tensor(reward).to(self.q_eval.device)
-        dones = T.tensor(done).to(self.q_eval.device)
+        dones = T.tensor(done, dtype=T.bool).to(self.q_eval.device)
 
         V_s, A_s = self.q_eval.forward(state)
         V_s_, A_s_ = self.q_next.forward(new_state)
@@ -155,3 +160,6 @@ class Agent(object):
     def load_models(self):
         self.q_eval.load_checkpoint()
         self.q_next.load_checkpoint()
+    
+    def reset_epsilon(self):
+        self.epsilon = self.default_epsilon

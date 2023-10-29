@@ -45,16 +45,16 @@ def plotLearning(x, scores, epsilons, filename, lines=None):
 
 if __name__ == "__main__":
     channel = EngineConfigurationChannel()
-    env = UE(file_name='space_rings_env', seed=1, worker_id=7, side_channels=[channel], no_graphics=False)
+    env = UE(file_name='space_rings_env', seed=1, worker_id=0, side_channels=[channel], no_graphics=True)
     channel.set_configuration_parameters(time_scale = 12.0, quality_level=0)
 
     env.reset()
     try:
         num_games = 10000
-        load_checkpoint = False
-        agent = Agent(gamma=0.99, epsilon=0.1, alpha=1e-6,
-                    input_dims=[14], n_actions=9, mem_size=100000, eps_min=0.1,
-                    batch_size=256, eps_dec=0, replace=1000, chkpt_dir='models2')
+        load_checkpoint = True
+        agent = Agent(gamma=0.999, epsilon=1, alpha=1e-5,
+                    input_dims=[8], n_actions=9, mem_size=100000, eps_min=0.01,
+                    batch_size=64, eps_dec=1e-5, replace=100, chkpt_dir='models2')
         if load_checkpoint:
             agent.load_models()
         filename = 'SpaceRings-Dueling-128-128-Adam-lr00001-replace1000-' + str(datetime.datetime.now()) + '.png'
@@ -100,7 +100,7 @@ if __name__ == "__main__":
                     observation_next = decision_steps[tracked_agent].obs
                     #print("reward added ", decision_steps[tracked_agent].reward)
                 if tracked_agent in terminal_steps.agent_id: # The agent terminated its episode
-                    reward = terminal_steps[tracked_agent].reward / 10
+                    reward = terminal_steps[tracked_agent].reward 
                     observation_next = terminal_steps[tracked_agent].obs
                     done = True
                 agent.store_transition(observation_before[0], action,
@@ -126,6 +126,6 @@ if __name__ == "__main__":
         
     except Exception as e:
         traceback.print_exc()
-        x = [i+1 for i in range(num_games)]
+        x = [i+1 for i in range(len(scores))]
         plotLearning(x, scores, eps_history, filename)
     env.close()

@@ -45,14 +45,14 @@ def plotLearning(x, scores, epsilons, filename, lines=None):
 
 if __name__ == "__main__":
     channel = EngineConfigurationChannel()
-    env = UE(file_name='space_rings_env', seed=1, worker_id=0, side_channels=[channel], no_graphics=False)
+    env = UE(file_name='space_rings_env', seed=1, worker_id=0, side_channels=[channel], no_graphics=True)
     channel.set_configuration_parameters(time_scale = 12.0, quality_level=0)
 
     env.reset()
     try:
         num_games = 10000
         load_checkpoint = True
-        agent = Agent(gamma=0.999, epsilon=0.01, alpha=5e-6,
+        agent = Agent(gamma=0.999, epsilon=0.01, alpha=2e-6,
                     input_dims=[8], n_actions=9, mem_size=100000, eps_min=0.01,
                     batch_size=64, eps_dec=2e-7, replace=100, chkpt_dir='models2')
         if load_checkpoint:

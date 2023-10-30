@@ -45,7 +45,7 @@ def plotLearning(x, scores, epsilons, filename, lines=None):
 
 if __name__ == "__main__":
     channel = EngineConfigurationChannel()
-    env = UE(file_name='space_rings_env', seed=1, worker_id=0, side_channels=[channel], no_graphics=True)
+    env = UE(file_name='space_rings_env', seed=1, worker_id=0, side_channels=[channel], no_graphics=False)
     channel.set_configuration_parameters(time_scale = 12.0, quality_level=0)
 
     env.reset()

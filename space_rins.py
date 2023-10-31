@@ -53,7 +53,7 @@ if __name__ == "__main__":
         num_games = 10000
         load_checkpoint = True
         agent = Agent(gamma=0.999, epsilon=0.01, alpha=2e-6,
-                    input_dims=[8], n_actions=9, mem_size=100000, eps_min=0.01,
+                    input_dims=[8], n_actions=9, mem_size=100000, eps_min=0.005,
                     batch_size=64, eps_dec=2e-7, replace=100, chkpt_dir='models2')
         if load_checkpoint:
             agent.load_models()

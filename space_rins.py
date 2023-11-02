@@ -45,22 +45,23 @@ def plotLearning(x, scores, epsilons, filename, lines=None):
 
 if __name__ == "__main__":
     channel = EngineConfigurationChannel()
-    env = UE(file_name='space_rings_env', seed=1, worker_id=0, side_channels=[channel], no_graphics=True)
+    env = UE(file_name='space_rings_env', seed=1, worker_id=0, side_channels=[channel], no_graphics=False)
     channel.set_configuration_parameters(time_scale = 12.0, quality_level=0)
 
     env.reset()
     try:
-        num_games = 10000
+        num_games = 0
         load_checkpoint = True
-        agent = Agent(gamma=0.999, epsilon=0.01, alpha=2e-6,
-                    input_dims=[8], n_actions=9, mem_size=100000, eps_min=0.005,
-                    batch_size=64, eps_dec=2e-7, replace=100, chkpt_dir='models2')
+        agent = Agent(gamma=0.999, epsilon=0.2, alpha=1e-5,
+                    input_dims=[14], n_actions=9, mem_size=100000, eps_min=0.05,
+                    batch_size=64, eps_dec=1e-5, replace=100, chkpt_dir='testmodels')
         if load_checkpoint:
             agent.load_models()
-        filename = 'SpaceRings-Dueling-128-128-Adam-lr00001-replace1000-' + str(datetime.datetime.now()) + '.png'
+        filename = 'SpaceRings-Dueling-128-128-Adam-lr00001-replace1000-' + str(datetime.datetime.now()) 
         scores = []
         eps_history = []
         n_steps = 0
+        avg_score = 0
 
     
         behavior_name = list(env.behavior_specs.keys())[0]
@@ -122,10 +123,14 @@ if __name__ == "__main__":
             eps_history.append(agent.epsilon)
         
         x = [i+1 for i in range(num_games)]
-        plotLearning(x, scores, eps_history, filename)
+        #plotLearning(x, scores, eps_history, filename + "avg" + str(avg_score) + '.png')
+        agent.save_onnx()
         
     except Exception as e:
-        traceback.print_exc()
-        x = [i+1 for i in range(len(scores))]
-        plotLearning(x, scores, eps_history, filename)
+        try:
+            traceback.print_exc()
+            x = [i+1 for i in range(len(scores))]
+            plotLearning(x, scores, eps_history, filename + "avg" + str(avg_score) + '.png')
+        except:
+            traceback.print_exc()      
     env.close()

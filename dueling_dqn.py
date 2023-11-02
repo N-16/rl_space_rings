@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 import datetime
+from model_to_onnx import WrapperNet
 
 
 class ReplayBuffer(object):
@@ -47,7 +48,8 @@ class DuelingLinearDeepQNetwork(nn.Module):
         self.fc2 = nn.Linear(128, 128)
         self.V = nn.Linear(128, 1)
         self.A = nn.Linear(128, n_actions)
-
+        self.input_dims = input_dims
+        self.num_actions = n_actions
         self.optimizer = optim.Adam(self.parameters(), lr=ALPHA)
         self.loss = nn.MSELoss()
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -71,7 +73,31 @@ class DuelingLinearDeepQNetwork(nn.Module):
     def load_checkpoint(self):
         print('... loading checkpoint ...')
         self.load_state_dict(T.load(self.checkpoint_file))
-
+    
+    def save_as_onnx(self):
+        print('... saving onnx ...')
+        torch_input = T.randn((1,*self.input_dims)).to(self.device)
+        T.onnx.export(
+            WrapperNet(self, [self.num_actions]),
+            # A tuple with an example of the input tensors
+            (torch_input, T.ones(1, self.num_actions).to(self.device)),
+            self.checkpoint_file + ".onnx",
+            opset_version=9,
+            # input_names must correspond to the WrapperNet forward parameters
+            # obs will be obs_0, obs_1, etc.
+            input_names=["obs_0", "action_masks"],
+            # output_names must correspond to the return tuple of the WrapperNet
+            # forward function.
+            output_names=["discrete_actions", "discrete_action_output_shape",
+                        "version_number", "memory_size"],
+            # All inputs and outputs should have their 0th dimension be designated
+            # as 'batch'
+            dynamic_axes={'obs_0': {0: 'batch'},
+                        'action_masks': {0: 'batch'},
+                        'discrete_actions': {0: 'batch'},
+                        'discrete_action_output_shape': {0: 'batch'}
+                        }
+        )
 class Agent(object):
     def __init__(self, gamma, epsilon, alpha, n_actions, input_dims,
                  mem_size, batch_size, eps_min=0.01, eps_dec=5e-7,
@@ -160,6 +186,9 @@ class Agent(object):
     def load_models(self):
         self.q_eval.load_checkpoint()
         self.q_next.load_checkpoint()
+
+    def save_onnx(self):
+        self.q_eval.save_as_onnx()
     
     def reset_epsilon(self):
         self.epsilon = self.default_epsilon

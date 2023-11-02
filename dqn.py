@@ -23,7 +23,7 @@ class DeepQNetwork(nn.Module):
         self.loss = nn.MSELoss()
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
         self.to(self.device)
-        self.file = os.path.join('dqn_models', +'ship_dqn')
+        self.file = os.path.join('dqn models', 'ship_dqn')
 
     def forward(self, state):
         x = F.relu(self.fc1(state))
@@ -35,7 +35,7 @@ class DeepQNetwork(nn.Module):
         print('... saving onnx ...')
         torch_input = T.randn((1,*self.input_dims)).to(self.device)
         T.onnx.export(
-            WrapperNet(self, [self.num_actions]),
+            WrapperNet(self, [self.num_actions], False),
             # A tuple with an example of the input tensors
             (torch_input, T.ones(1, self.num_actions).to(self.device)),
             self.file + ".onnx",
@@ -136,3 +136,6 @@ class Agent:
         self.iter_cntr += 1
         self.epsilon = self.epsilon - self.eps_dec \
             if self.epsilon > self.eps_min else self.eps_min
+    
+    def save_onnx(self):
+        self.Q_eval.save_as_onnx()

@@ -1,4 +1,4 @@
-from dueling_dqn import Agent
+from dqn import Agent
 import matplotlib.pyplot as plt
 import mlagents
 from mlagents_envs.environment import UnityEnvironment as UE
@@ -50,14 +50,12 @@ if __name__ == "__main__":
 
     env.reset()
     try:
-        num_games = 0
+        num_games = 10000
         load_checkpoint = True
-        agent = Agent(gamma=0.999, epsilon=0.2, alpha=1e-5,
-                    input_dims=[8], n_actions=9, mem_size=100000, eps_min=0.05,
-                    batch_size=64, eps_dec=1e-5, replace=100, chkpt_dir='best performing models')
-        if load_checkpoint:
-            agent.load_models()
-        filename = 'SpaceRings-Dueling-128-128-Adam-lr00001-replace1000-' + str(datetime.datetime.now()) 
+        agent = Agent(gamma=0.99, epsilon=0.2, lr=1e-5,batch_size = 64,
+                    input_dims=[8], n_actions=9, max_mem_size=100000, eps_end=0.05,
+                    eps_dec=1e-4)
+        filename = 'SpaceRings-DQN-128-128-Adam-lr00001-replace1000-' + str(datetime.datetime.now()) 
         scores = []
         eps_history = []
         n_steps = 0

@@ -78,7 +78,7 @@ class DuelingLinearDeepQNetwork(nn.Module):
         print('... saving onnx ...')
         torch_input = T.randn((1,*self.input_dims)).to(self.device)
         T.onnx.export(
-            WrapperNet(self, [self.num_actions]),
+            WrapperNet(self, [self.num_actions], True),
             # A tuple with an example of the input tensors
             (torch_input, T.ones(1, self.num_actions).to(self.device)),
             self.checkpoint_file + ".onnx",

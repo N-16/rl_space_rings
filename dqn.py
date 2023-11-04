@@ -55,6 +55,9 @@ class DeepQNetwork(nn.Module):
                         'discrete_action_output_shape': {0: 'batch'}
                         }
         )
+    def save_checkpoint(self):
+        print('... saving checkpoint ...')
+        T.save(self.state_dict(), self.file)
 
 
 class Agent:
@@ -139,3 +142,6 @@ class Agent:
     
     def save_onnx(self):
         self.Q_eval.save_as_onnx()
+    
+    def save_model(self):
+        self.Q_eval.save_checkpoint()

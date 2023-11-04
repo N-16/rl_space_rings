@@ -45,7 +45,7 @@ def plotLearning(x, scores, epsilons, filename, lines=None):
 
 if __name__ == "__main__":
     channel = EngineConfigurationChannel()
-    env = UE(file_name='space_rings_env', seed=1, worker_id=0, side_channels=[channel], no_graphics=False)
+    env = UE(file_name='space_rings_env', seed=1, worker_id=1, side_channels=[channel], no_graphics=False)
     channel.set_configuration_parameters(time_scale = 12.0, quality_level=0)
 
     env.reset()
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         load_checkpoint = True
         agent = Agent(gamma=0.99, epsilon=0.2, lr=1e-5,batch_size = 64,
                     input_dims=[8], n_actions=9, max_mem_size=100000, eps_end=0.05,
-                    eps_dec=1e-4)
+                    eps_dec=1e-6)
         filename = 'SpaceRings-DQN-128-128-Adam-lr00001-replace1000-' + str(datetime.datetime.now()) 
         scores = []
         eps_history = []
@@ -113,7 +113,7 @@ if __name__ == "__main__":
                 ' average score %.1f' % avg_score,
                 'epsilon %.2f' % agent.epsilon)
             if episode > 0 and episode % 10 == 0:
-                agent.save_models()
+                agent.save_model()
 
             #if episode % 1000 == 0:
                 #agent.reset_epsilon()

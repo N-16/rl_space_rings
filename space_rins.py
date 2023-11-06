@@ -51,13 +51,13 @@ if __name__ == "__main__":
     env.reset()
     try:
         num_games = 10000
-        load_checkpoint = False
-        agent = Agent(gamma=0.99, epsilon=1, alpha=1e-5,
-                    input_dims=[11], n_actions=9, mem_size=100000, eps_min=0.05,
+        load_checkpoint = True
+        agent = Agent(gamma=0.99, epsilon=1.0, alpha=5e-6,
+                    input_dims=[11], n_actions=9, mem_size=100000, eps_min=0.02,
                     batch_size=64, eps_dec=1e-5, replace=100, chkpt_dir='models2')
         if load_checkpoint:
             agent.load_models()
-        filename = 'SpaceRings-Dueling-128-128-Adam-lr00001-replace1000-' + str(datetime.datetime.now()) 
+        filename = 'SpaceRings-Dueling-NewShapedReward' + str(datetime.datetime.now()) 
         scores = []
         eps_history = []
         n_steps = 0
@@ -114,7 +114,7 @@ if __name__ == "__main__":
             print('episode: ', episode,'score %.1f ' % episode_rewards,
                 ' average score %.1f' % avg_score,
                 'epsilon %.2f' % agent.epsilon)
-            if episode > 0 and episode % 10 == 0:
+            if episode > 0 and episode % 1000 == 0:
                 agent.save_models()
 
             #if episode % 1000 == 0:
@@ -123,8 +123,9 @@ if __name__ == "__main__":
             eps_history.append(agent.epsilon)
         
         x = [i+1 for i in range(num_games)]
-        #plotLearning(x, scores, eps_history, filename + "avg" + str(avg_score) + '.png')
+        plotLearning(x, scores, eps_history, filename + "avg" + str(avg_score) + '.png')
         agent.save_onnx()
+        env.close() 
         
     except Exception as e:
         try:

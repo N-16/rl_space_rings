@@ -44,8 +44,8 @@ class DuelingLinearDeepQNetwork(nn.Module):
     def __init__(self, ALPHA, n_actions, name, input_dims, chkpt_dir='models'):
         super(DuelingLinearDeepQNetwork, self).__init__()
 
-        self.fc1 = nn.Linear(*input_dims, 128)
-        self.fc2 = nn.Linear(128, 128)
+        self.fc1 = nn.Linear(*input_dims, 256)
+        self.fc2 = nn.Linear(256, 128)
         self.V = nn.Linear(128, 1)
         self.A = nn.Linear(128, n_actions)
         self.input_dims = input_dims

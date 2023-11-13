@@ -45,9 +45,9 @@ class DuelingLinearDeepQNetwork(nn.Module):
         super(DuelingLinearDeepQNetwork, self).__init__()
 
         self.fc1 = nn.Linear(*input_dims, 256)
-        self.fc2 = nn.Linear(256, 128)
-        self.V = nn.Linear(128, 1)
-        self.A = nn.Linear(128, n_actions)
+        self.fc2 = nn.Linear(256, 256)
+        self.V = nn.Linear(256, 1)
+        self.A = nn.Linear(256, n_actions)
         self.input_dims = input_dims
         self.num_actions = n_actions
         self.optimizer = optim.Adam(self.parameters(), lr=ALPHA)

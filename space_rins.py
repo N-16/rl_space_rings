@@ -52,9 +52,9 @@ if __name__ == "__main__":
     try:
         num_games = 10000
         load_checkpoint = True
-        agent = Agent(gamma=0.99, epsilon=1.0, alpha=5e-6,
-                    input_dims=[11], n_actions=9, mem_size=100000, eps_min=0.02,
-                    batch_size=64, eps_dec=1e-5, replace=100, chkpt_dir='models2')
+        agent = Agent(gamma=0.5, epsilon=0.05, alpha=1e-5,
+                    input_dims=[11], n_actions=9, mem_size=100000, eps_min=0.05,
+                    batch_size=128, eps_dec=0, replace=100, chkpt_dir='models2')
         if load_checkpoint:
             agent.load_models()
         filename = 'SpaceRings-Dueling-NewShapedReward' + str(datetime.datetime.now()) 

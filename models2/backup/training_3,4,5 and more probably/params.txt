@@ -1,0 +1,6 @@
+lr = 5e-7
+epsilon = 0.05
+no epsilon decay
+batch_size=128
+replace=100
+gamma = 0.99

@@ -6,7 +6,7 @@ class WrapperNet(torch.nn.Module):
             self,
             qnet,
             discrete_output_sizes,
-            dueling_formward
+            dueling_forward
     ):
         """
         Wraps the VisualQNetwork adding extra constants and dummy mask inputs
@@ -34,7 +34,7 @@ class WrapperNet(torch.nn.Module):
         output_shape=torch.Tensor([discrete_output_sizes])
         self.discrete_shape = Parameter(output_shape, requires_grad=False)
 
-        self.dueling_forward = dueling_formward
+        self.dueling_forward = dueling_forward
 
 
     # if you have discrete actions ML-agents expects corresponding a mask

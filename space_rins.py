@@ -1,4 +1,5 @@
 from dueling_dqn import Agent
+from dueling_dqn import DuelingLinearDeepQNetwork
 import matplotlib.pyplot as plt
 import mlagents
 from mlagents_envs.environment import UnityEnvironment as UE
@@ -7,6 +8,7 @@ import numpy as np
 import traceback
 from mlagents_envs.side_channel.engine_configuration_channel import EngineConfigurationChannel
 import datetime
+import torch as T
 
 
 def plotLearning(x, scores, epsilons, filename, lines=None):
@@ -43,18 +45,18 @@ def plotLearning(x, scores, epsilons, filename, lines=None):
 
     plt.savefig(filename)
 
-if __name__ == "__main__":
+'''if __name__ == "__main__":
     channel = EngineConfigurationChannel()
     env = UE(file_name='space_rings_env', seed=1, worker_id=3, side_channels=[channel], no_graphics=False)
     channel.set_configuration_parameters(time_scale = 12.0, quality_level=0)
 
     env.reset()
     try:
-        num_games = 10000
+        num_games = 5000
         load_checkpoint = True
         agent = Agent(gamma=0.5, epsilon=0.05, alpha=1e-5,
-                    input_dims=[11], n_actions=9, mem_size=100000, eps_min=0.05,
-                    batch_size=128, eps_dec=0, replace=100, chkpt_dir='models2')
+                    input_dims=[11], n_actions=9, mem_size=100000, eps_min=0.01,
+                    batch_size=128, eps_dec=1e-6, replace=100, chkpt_dir='models2')
         if load_checkpoint:
             agent.load_models()
         filename = 'SpaceRings-Dueling-NewShapedReward' + str(datetime.datetime.now()) 
@@ -135,5 +137,63 @@ if __name__ == "__main__":
             env.close()
         except:
             traceback.print_exc()     
-            env.close() 
+            env.close() '''
+    
+
+def testAgent(model,env, num_games = 100):
+    device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+    scores = []
+    behavior_name = list(env.behavior_specs.keys())[0]
+    for episode in range(num_games):
+        env.reset()
+        decision_steps, terminal_steps = env.get_steps(behavior_name)
+        tracked_agent = -1 # -1 indicates not yet tracking
+        done = False # For the tracked_agent
+        episode_rewards = 0 # For the tracked_agent
+        while not done:
+            reward = 0
+            # Track the first agent we see if not tracking
+            # Note : len(decision_steps) = [number of agents that requested a decision]
+            if tracked_agent == -1 and len(decision_steps) >= 1:
+                tracked_agent = decision_steps.agent_id[0]
+            # Generate an action for all agents
+            observation = decision_steps[tracked_agent].obs
+            observation = observation[0]
+            observation = observation[np.newaxis,:]
+            state = T.tensor(observation).to(device)
+            _, advantage = model.forward(state)
+            action = T.argmax(advantage).item()
+            # Set the actions
+            env.set_actions(behavior_name, ActionTuple(discrete=np.array([[action]], dtype=np.int32)))
+            # Move the simulation forward
+            env.step()
+            # Get the new simulation results
+            decision_steps, terminal_steps = env.get_steps(behavior_name)
+            if tracked_agent in decision_steps.agent_id: # The agent requested a decision
+                reward = decision_steps[tracked_agent].reward
+                #print("reward added ", decision_steps[tracked_agent].reward)
+            if tracked_agent in terminal_steps.agent_id: # The agent terminated its episode
+                reward = terminal_steps[tracked_agent].reward 
+                done = True
+            episode_rewards += reward
+        #print(f"Total rewards for episode {episode} is {episode_rewards}")
+        scores.append(episode_rewards)
+        avg_score = np.mean(scores[0:(episode+1)])
+        print('episode: ', episode,'score %.1f ' % episode_rewards,
+            ' average score %.1f' % avg_score)
+try:        
+    channel = EngineConfigurationChannel()
+    env = UE(file_name='space_rings_env', seed=1, worker_id=3, side_channels=[channel], no_graphics=False)
+    channel.set_configuration_parameters(time_scale = 12.0, quality_level=0)
+
+    env.reset()
+    num_games = 100
+    model = DuelingLinearDeepQNetwork(0, 9, input_dims=[11],
+                                    name='q_eval', chkpt_dir='models2/backup/test_test')
+    model.load_checkpoint()
+    testAgent(model, env)
+    env.close()
+except Exception as e:
+    traceback.print_exc()  
+    env.close()
     
